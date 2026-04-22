@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Powered House Price Prediction with 3D visualization, market analytics, EMI calculator and smart comparison tools.">
+    <title>HomeValuate AI — Smart House Price Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loader -->
+    <div id="loader">
+        <div class="loader-content">
+            <div class="loader-house">
+                <div class="loader-roof"></div>
+                <div class="loader-body"></div>
+            </div>
+            <div class="loader-text">HomeValuate AI</div>
+            <div class="loader-bar"><div class="loader-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- 3D Canvas Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Floating Particles -->
+    <div id="particles"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </div>
+            <span class="brand-name">HomeValuate<span class="brand-ai">AI</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="#hero" class="nav-link active" data-section="hero">Home</a>
+            <a href="#predictor" class="nav-link" data-section="predictor">Predict</a>
+            <a href="#analytics" class="nav-link" data-section="analytics">Analytics</a>
+            <a href="#compare" class="nav-link" data-section="compare">Compare</a>
+            <a href="#emi" class="nav-link" data-section="emi">EMI</a>
+        </div>
+        <div class="nav-actions">
+            <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+                <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+        </div>
+        <button class="mobile-toggle" id="mobile-menu-btn">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="section">
+        <div class="hero-content">
+            <div class="hero-badge">🏠 AI-Powered Predictions</div>
+            <h1 class="hero-title">
+                Predict House Prices
+                <span class="gradient-text">With Intelligence</span>
+            </h1>
+            <p class="hero-subtitle">Advanced machine learning model with 3D visualization. Get instant property valuations, market analytics, EMI calculations, and smart comparisons.</p>
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-value" data-count="98.5">0</div>
+                    <div class="stat-label">Accuracy %</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" data-count="50000">0</div>
+                    <div class="stat-label">Properties Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" data-count="120">0</div>
+                    <div class="stat-label">Cities Covered</div>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="#predictor" class="btn btn-primary">
+                    <span>Start Predicting</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+                <a href="#analytics" class="btn btn-glass">
+                    <span>View Analytics</span>
+                </a>
+            </div>
+        </div>
+        <div class="hero-3d" id="hero-3d-container"></div>
+    </section>
+
+    <!-- Predictor Section -->
+    <section id="predictor" class="section">
+        <div class="section-header">
+            <div class="section-badge">🤖 AI Prediction Engine</div>
+            <h2 class="section-title">Smart Price <span class="gradient-text">Predictor</span></h2>
+            <p class="section-desc">Enter property details and our AI model predicts the most accurate market value</p>
+        </div>
+        <div class="predictor-grid">
+            <div class="input-panel glass-card">
+                <h3 class="panel-title">Property Details</h3>
+                <div class="input-group">
+                    <label for="area-input">Area (sq ft)</label>
+                    <div class="slider-container">
+                        <input type="range" id="area-slider" min="200" max="5000" value="1200" step="50">
+                        <input type="number" id="area-input" value="1200" min="200" max="5000">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="bedrooms-input">Bedrooms</label>
+                    <div class="btn-group" id="bedroom-btns">
+                        <button class="chip" data-val="1">1</button>
+                        <button class="chip active" data-val="2">2</button>
+                        <button class="chip" data-val="3">3</button>
+                        <button class="chip" data-val="4">4</button>
+                        <button class="chip" data-val="5">5+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="bathrooms-input">Bathrooms</label>
+                    <div class="btn-group" id="bathroom-btns">
+                        <button class="chip active" data-val="1">1</button>
+                        <button class="chip" data-val="2">2</button>
+                        <button class="chip" data-val="3">3</button>
+                        <button class="chip" data-val="4">4+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="location-select">Location</label>
+                    <select id="location-select" class="select-input">
+                        <option value="1.0">Mumbai - Premium</option>
+                        <option value="0.9">Delhi NCR</option>
+                        <option value="0.85" selected>Bangalore</option>
+                        <option value="0.8">Hyderabad</option>
+                        <option value="0.75">Pune</option>
+                        <option value="0.7">Chennai</option>
+                        <option value="0.6">Kolkata</option>
+                        <option value="0.55">Ahmedabad</option>
+                        <option value="0.5">Jaipur</option>
+                        <option value="0.45">Lucknow</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="age-input">Property Age (years)</label>
+                    <div class="slider-container">
+                        <input type="range" id="age-slider" min="0" max="30" value="2" step="1">
+                        <input type="number" id="age-input" value="2" min="0" max="30">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="floor-input">Floor</label>
+                    <div class="slider-container">
+                        <input type="range" id="floor-slider" min="0" max="40" value="5" step="1">
+                        <input type="number" id="floor-input" value="5" min="0" max="40">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Amenities</label>
+                    <div class="amenity-grid">
+                        <label class="amenity-chip"><input type="checkbox" id="parking" checked><span>🅿️ Parking</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="gym"><span>🏋️ Gym</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="pool"><span>🏊 Pool</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="garden" checked><span>🌳 Garden</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="security" checked><span>🔒 Security</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="lift"><span>🛗 Lift</span></label>
+                    </div>
+                </div>
+                <button id="predict-btn" class="btn btn-primary btn-full">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span>Predict Price</span>
+                </button>
+            </div>
+
+            <div class="result-panel">
+                <div class="result-card glass-card" id="result-card">
+                    <div class="result-placeholder" id="result-placeholder">
+                        <div class="placeholder-icon">🏠</div>
+                        <p>Configure property details and click predict</p>
+                    </div>
+                    <div class="result-content" id="result-content" style="display:none;">
+                        <div class="price-display">
+                            <span class="price-label">Estimated Price</span>
+                            <div class="price-value">₹<span id="predicted-price">0</span> <span class="price-unit">Lakhs</span></div>
+                            <div class="confidence-badge" id="confidence-badge">95% Confidence</div>
+                        </div>
+                        <div class="result-breakdown">
+                            <div class="breakdown-item">
+                                <span class="bd-label">Base Price</span>
+                                <span class="bd-value" id="base-price">₹0L</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="bd-label">Location Premium</span>
+                                <span class="bd-value" id="loc-premium">+₹0L</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="bd-label">Amenity Value</span>
+                                <span class="bd-value" id="amenity-val">+₹0L</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span class="bd-label">Age Depreciation</span>
+                                <span class="bd-value negative" id="age-dep">-₹0L</span>
+                            </div>
+                        </div>
+                        <div class="price-range">
+                            <div class="range-bar">
+                                <div class="range-fill" id="range-fill"></div>
+                                <div class="range-marker" id="range-marker"></div>
+                            </div>
+                            <div class="range-labels">
+                                <span id="range-low">₹0L</span>
+                                <span id="range-high">₹0L</span>
+                            </div>
+                        </div>
+                        <canvas id="priceFactorsChart" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="mini-cards">
+                    <div class="mini-card glass-card">
+                        <div class="mini-icon">📈</div>
+                        <div class="mini-label">Price/sqft</div>
+                        <div class="mini-value" id="price-per-sqft">₹0</div>
+                    </div>
+                    <div class="mini-card glass-card">
+                        <div class="mini-icon">🏷️</div>
+                        <div class="mini-label">Category</div>
+                        <div class="mini-value" id="property-cat">—</div>
+                    </div>
+                    <div class="mini-card glass-card">
+                        <div class="mini-icon">📊</div>
+                        <div class="mini-label">Market Trend</div>
+                        <div class="mini-value" id="market-trend">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analytics" class="section">
+        <div class="section-header">
+            <div class="section-badge">📊 Market Intelligence</div>
+            <h2 class="section-title">Market <span class="gradient-text">Analytics</span></h2>
+            <p class="section-desc">Real-time market data, trends, and insights powered by AI</p>
+        </div>
+        <div class="analytics-grid">
+            <div class="chart-card glass-card">
+                <h3>Price Trends (2020-2026)</h3>
+                <canvas id="trendChart"></canvas>
+            </div>
+            <div class="chart-card glass-card">
+                <h3>City-wise Prices (₹/sqft)</h3>
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="chart-card glass-card">
+                <h3>Property Type Distribution</h3>
+                <canvas id="typeChart"></canvas>
+            </div>
+            <div class="chart-card glass-card">
+                <h3>Area vs Price Regression</h3>
+                <canvas id="regressionChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compare Section -->
+    <section id="compare" class="section">
+        <div class="section-header">
+            <div class="section-badge">⚖️ Smart Compare</div>
+            <h2 class="section-title">Property <span class="gradient-text">Comparison</span></h2>
+            <p class="section-desc">Compare up to 3 properties side by side</p>
+        </div>
+        <div class="compare-grid" id="compare-grid">
+            <div class="compare-card glass-card" id="compare-1">
+                <h4>Property A</h4>
+                <div class="compare-input"><label>Area (sqft)</label><input type="number" class="cmp-area" value="1000"></div>
+                <div class="compare-input"><label>Bedrooms</label><input type="number" class="cmp-bed" value="2" min="1" max="5"></div>
+                <div class="compare-input"><label>Location</label>
+                    <select class="cmp-loc"><option value="1.0">Mumbai</option><option value="0.9">Delhi</option><option value="0.85" selected>Bangalore</option><option value="0.8">Hyderabad</option><option value="0.75">Pune</option><option value="0.7">Chennai</option></select>
+                </div>
+                <div class="compare-result"><span class="cmp-price">₹0 Lakhs</span></div>
+            </div>
+            <div class="compare-card glass-card" id="compare-2">
+                <h4>Property B</h4>
+                <div class="compare-input"><label>Area (sqft)</label><input type="number" class="cmp-area" value="1500"></div>
+                <div class="compare-input"><label>Bedrooms</label><input type="number" class="cmp-bed" value="3" min="1" max="5"></div>
+                <div class="compare-input"><label>Location</label>
+                    <select class="cmp-loc"><option value="1.0">Mumbai</option><option value="0.9" selected>Delhi</option><option value="0.85">Bangalore</option><option value="0.8">Hyderabad</option><option value="0.75">Pune</option><option value="0.7">Chennai</option></select>
+                </div>
+                <div class="compare-result"><span class="cmp-price">₹0 Lakhs</span></div>
+            </div>
+            <div class="compare-card glass-card" id="compare-3">
+                <h4>Property C</h4>
+                <div class="compare-input"><label>Area (sqft)</label><input type="number" class="cmp-area" value="2000"></div>
+                <div class="compare-input"><label>Bedrooms</label><input type="number" class="cmp-bed" value="4" min="1" max="5"></div>
+                <div class="compare-input"><label>Location</label>
+                    <select class="cmp-loc"><option value="1.0" selected>Mumbai</option><option value="0.9">Delhi</option><option value="0.85">Bangalore</option><option value="0.8">Hyderabad</option><option value="0.75">Pune</option><option value="0.7">Chennai</option></select>
+                </div>
+                <div class="compare-result"><span class="cmp-price">₹0 Lakhs</span></div>
+            </div>
+        </div>
+        <button id="compare-btn" class="btn btn-primary" style="margin:2rem auto;display:block;">Compare Properties</button>
+        <div class="compare-chart-wrap glass-card" style="max-width:700px;margin:2rem auto;padding:2rem;">
+            <canvas id="compareChart" height="250"></canvas>
+        </div>
+    </section>
+
+    <!-- EMI Section -->
+    <section id="emi" class="section">
+        <div class="section-header">
+            <div class="section-badge">🏦 Finance Calculator</div>
+            <h2 class="section-title">EMI <span class="gradient-text">Calculator</span></h2>
+            <p class="section-desc">Plan your home loan with detailed monthly breakdowns</p>
+        </div>
+        <div class="emi-grid">
+            <div class="emi-inputs glass-card">
+                <div class="input-group">
+                    <label for="loan-amount">Loan Amount (₹ Lakhs)</label>
+                    <div class="slider-container">
+                        <input type="range" id="loan-slider" min="5" max="500" value="50" step="5">
+                        <input type="number" id="loan-amount" value="50" min="5" max="500">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="interest-rate">Interest Rate (%)</label>
+                    <div class="slider-container">
+                        <input type="range" id="interest-slider" min="5" max="15" value="8.5" step="0.1">
+                        <input type="number" id="interest-rate" value="8.5" min="5" max="15" step="0.1">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="loan-tenure">Tenure (Years)</label>
+                    <div class="slider-container">
+                        <input type="range" id="tenure-slider" min="1" max="30" value="20" step="1">
+                        <input type="number" id="loan-tenure" value="20" min="1" max="30">
+                    </div>
+                </div>
+                <div class="emi-result-grid">
+                    <div class="emi-stat">
+                        <span class="emi-stat-label">Monthly EMI</span>
+                        <span class="emi-stat-value" id="emi-value">₹0</span>
+                    </div>
+                    <div class="emi-stat">
+                        <span class="emi-stat-label">Total Interest</span>
+                        <span class="emi-stat-value" id="total-interest">₹0</span>
+                    </div>
+                    <div class="emi-stat">
+                        <span class="emi-stat-label">Total Payment</span>
+                        <span class="emi-stat-value" id="total-payment">₹0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="emi-chart-wrap glass-card">
+                <canvas id="emiChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="brand-name">HomeValuate<span class="brand-ai">AI</span></span>
+                <p>AI-Powered House Price Prediction Platform</p>
+            </div>
+            <div class="footer-links">
+                <a href="#hero">Home</a><a href="#predictor">Predict</a><a href="#analytics">Analytics</a><a href="#compare">Compare</a><a href="#emi">EMI</a>
+            </div>
+            <p class="footer-copy">© 2026 HomeValuate AI. Built with ❤️ and Machine Learning.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
