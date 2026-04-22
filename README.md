@@ -19,16 +19,7 @@ An AI-powered house price prediction web application with stunning 3D animations
 - ✨ **Smooth Animations** — Loader, scroll reveals, counter animations, hover effects
 - 🎯 **Particle System** — Floating ambient particles in background
 
-## 🚀 Live Demo
-
-> Open `index.html` directly in your browser — no server required!
-
-Or run a local server:
-```bash
-npx http-server . -p 8080
-```
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Technology | Usage |
 |-----------|-------|
@@ -75,7 +66,7 @@ House Price Prediction/
 └── .gitignore
 ```
 
-## 🤖 How the Prediction Works
+## How the Prediction Works
 
 The prediction engine uses a multi-feature linear regression model:
 
@@ -95,7 +86,3 @@ Factors include:
 ## 📄 License
 
 MIT License — feel free to use and modify!
-
-## 🙏 Credits
-
-Built with ❤️ using Three.js, Chart.js, and vanilla HTML/CSS/JS.
