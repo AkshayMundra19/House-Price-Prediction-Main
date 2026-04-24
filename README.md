@@ -6,7 +6,7 @@ An AI-powered house price prediction web application with stunning 3D animations
 ![Three.js](https://img.shields.io/badge/Three.js-3D-black?style=for-the-badge&logo=three.js)
 ![Chart.js](https://img.shields.io/badge/Chart.js-Visualizations-ff6384?style=for-the-badge)
 
-## ✨ Features
+## Features
 
 - 🏠 **3D Animated House** — Rotating Three.js model with floating data cubes and dynamic lighting
 - 🤖 **AI Price Predictor** — Multi-feature prediction (area, bedrooms, bathrooms, location, age, floor, amenities)
@@ -29,7 +29,7 @@ An AI-powered house price prediction web application with stunning 3D animations
 | Three.js | 3D House Model & Scene |
 | Chart.js | Interactive Data Visualizations |
 
-## 📸 Screenshots
+## Screenshots
 
 ### Hero Section
 - Beautiful 3D animated house rotating in the background
@@ -54,7 +54,7 @@ An AI-powered house price prediction web application with stunning 3D animations
 - Interactive sliders for loan amount, interest rate, tenure
 - Real-time EMI calculation with principal/interest breakdown
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 House Price Prediction/
@@ -83,6 +83,6 @@ Factors include:
 - **Floor**: Premium for higher floors
 - **Age**: Depreciation for older properties
 
-## 📄 License
+## License
 
 MIT License — feel free to use and modify!
