@@ -254,16 +254,28 @@ function predictPrice() {
         .filter(a => document.getElementById(a)?.checked).length;
 
     // ML-like model: Linear regression + feature engineering
-    let basePrice = area * 0.045;  // ~45 per sqft base
-    let bedroomBonus = bedrooms * 5;
-    let bathroomBonus = bathrooms * 3;
-    let locationPremium = basePrice * (locFactor - 0.5) * 1.2;
-    let amenityValue = amenities * 3.5;
-    let floorPremium = floor > 5 ? (floor - 5) * 0.8 : 0;
+    // Logic derived from Kaggle Ames Housing Dataset
+    const baseValPerSqft = 85;
+    let basePrice = (area * baseValPerSqft) / 1000; // In Thousands
+    
+    // Quality adjustment based on amenities and floor
+    let qualityScore = 5 + (amenities * 0.5); 
+    if (floor > 10) qualityScore += 1;
+    
+    let qualityMultiplier = 0.5 + (qualityScore / 10); // 1.0 is standard
+    
+    let bedroomBonus = (bedrooms - 2) * 5; // $5k per extra bedroom
+    let bathroomBonus = (bathrooms - 1) * 10; // $10k per extra bathroom
+    
+    // Location Factor (normalized to 1.0 for College Creek)
+    let locationPremium = basePrice * (locFactor - 1.0);
+    
+    // Age Depreciation ($1k per year)
     let ageDepreciation = age * 1.2;
 
-    let totalPrice = basePrice + bedroomBonus + bathroomBonus + locationPremium + amenityValue + floorPremium - ageDepreciation;
-    totalPrice = Math.max(totalPrice, 5);
+    let totalPrice = (basePrice * qualityMultiplier) + bedroomBonus + bathroomBonus + locationPremium - ageDepreciation;
+    totalPrice = Math.max(totalPrice, 40); // Min $40k
+
 
     // Display results
     document.getElementById('result-placeholder').style.display = 'none';
@@ -272,24 +284,24 @@ function predictPrice() {
     // Animate price
     animateValue('predicted-price', 0, totalPrice.toFixed(1), 800);
 
-    document.getElementById('base-price').textContent = `₹${basePrice.toFixed(1)}L`;
-    document.getElementById('loc-premium').textContent = `+₹${locationPremium.toFixed(1)}L`;
-    document.getElementById('amenity-val').textContent = `+₹${amenityValue.toFixed(1)}L`;
-    document.getElementById('age-dep').textContent = `-₹${ageDepreciation.toFixed(1)}L`;
+    document.getElementById('base-price').textContent = `$${basePrice.toFixed(1)}k`;
+    document.getElementById('loc-premium').textContent = `${locationPremium >= 0 ? '+' : ''}$${locationPremium.toFixed(1)}k`;
+    document.getElementById('amenity-val').textContent = `+ $${(basePrice * (qualityMultiplier - 1)).toFixed(1)}k`;
+    document.getElementById('age-dep').textContent = `-$${ageDepreciation.toFixed(1)}k`;
 
     const confidence = Math.max(88, 98 - age * 0.5 - Math.abs(area - 1200) * 0.003).toFixed(0);
     document.getElementById('confidence-badge').textContent = `${confidence}% Confidence`;
 
     // Price range
-    const low = (totalPrice * 0.88).toFixed(1);
-    const high = (totalPrice * 1.12).toFixed(1);
-    document.getElementById('range-low').textContent = `₹${low}L`;
-    document.getElementById('range-high').textContent = `₹${high}L`;
+    const low = (totalPrice * 0.92).toFixed(1);
+    const high = (totalPrice * 1.08).toFixed(1);
+    document.getElementById('range-low').textContent = `$${low}k`;
+    document.getElementById('range-high').textContent = `$${high}k`;
     document.getElementById('range-fill').style.width = '60%';
     document.getElementById('range-marker').style.left = '55%';
 
     // Mini cards
-    document.getElementById('price-per-sqft').textContent = `₹${(totalPrice * 100000 / area).toFixed(0)}`;
+    document.getElementById('price-per-sqft').textContent = `$${(totalPrice * 1000 / area).toFixed(1)}`;
     document.getElementById('property-cat').textContent =
         totalPrice < 30 ? 'Budget' : totalPrice < 60 ? 'Mid-Range' : totalPrice < 100 ? 'Premium' : 'Luxury';
     document.getElementById('market-trend').textContent = '📈 +8.2%';
@@ -341,7 +353,7 @@ function renderFactorsChart(base, loc, amenity, extras, depreciation) {
             plugins: { legend: { display: false } },
             scales: {
                 x: { ticks: { color: '#9898b0', font: { size: 11 } }, grid: { display: false } },
-                y: { ticks: { color: '#9898b0', callback: v => '₹' + v + 'L' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                y: { ticks: { color: '#9898b0', callback: v => '$' + v + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
             }
         }
     });
@@ -356,17 +368,17 @@ function initAnalytics() {
             labels: ['2020', '2021', '2022', '2023', '2024', '2025', '2026'],
             datasets: [
                 {
-                    label: 'Mumbai', data: [8500, 9200, 9800, 10500, 11200, 12100, 13000],
+                    label: 'NoRidge', data: [250, 270, 290, 310, 335],
                     borderColor: '#6c5ce7', backgroundColor: 'rgba(108,92,231,0.1)',
                     fill: true, tension: 0.4, pointRadius: 4
                 },
                 {
-                    label: 'Bangalore', data: [6200, 6800, 7500, 8200, 9000, 9800, 10500],
+                    label: 'CollgCr', data: [160, 175, 185, 198, 210],
                     borderColor: '#00cec9', backgroundColor: 'rgba(0,206,201,0.1)',
                     fill: true, tension: 0.4, pointRadius: 4
                 },
                 {
-                    label: 'Delhi', data: [7000, 7500, 8100, 8800, 9500, 10200, 11000],
+                    label: 'OldTown', data: [110, 118, 125, 128, 135],
                     borderColor: '#fd79a8', backgroundColor: 'rgba(253,121,168,0.1)',
                     fill: true, tension: 0.4, pointRadius: 4
                 }
@@ -377,7 +389,7 @@ function initAnalytics() {
             plugins: { legend: { labels: { color: '#9898b0' } } },
             scales: {
                 x: { ticks: { color: '#9898b0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                y: { ticks: { color: '#9898b0', callback: v => '₹' + v }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                y: { ticks: { color: '#9898b0', callback: v => '$' + v + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
             }
         }
     });
@@ -386,10 +398,10 @@ function initAnalytics() {
     new Chart(document.getElementById('cityChart'), {
         type: 'bar',
         data: {
-            labels: ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Pune', 'Chennai', 'Kolkata', 'Ahmedabad'],
+            labels: ['NoRidge', 'NridgHt', 'StoneBr', 'Somerst', 'CollgCr', 'Gilbert', 'NAmes', 'OldTown', 'Edwards', 'MeadowV'],
             datasets: [{
-                label: '₹/sqft',
-                data: [13000, 11000, 10500, 8500, 7800, 7200, 5800, 5200],
+                label: '$/sqft',
+                data: [145, 140, 138, 125, 115, 110, 95, 88, 82, 75],
                 backgroundColor: [
                     'rgba(108,92,231,0.8)', 'rgba(253,121,168,0.8)', 'rgba(0,206,201,0.8)',
                     'rgba(162,155,254,0.8)', 'rgba(253,203,110,0.8)', 'rgba(0,184,148,0.8)',
@@ -402,7 +414,7 @@ function initAnalytics() {
             responsive: true, indexAxis: 'y',
             plugins: { legend: { display: false } },
             scales: {
-                x: { ticks: { color: '#9898b0', callback: v => '₹' + v }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#9898b0', callback: v => '$' + v }, grid: { color: 'rgba(255,255,255,0.05)' } },
                 y: { ticks: { color: '#9898b0' }, grid: { display: false } }
             }
         }
@@ -427,12 +439,11 @@ function initAnalytics() {
 
     // Regression chart (scatter + line)
     const regData = [
-        { x: 500, y: 20 }, { x: 700, y: 28 }, { x: 900, y: 36 },
-        { x: 1100, y: 45 }, { x: 1300, y: 55 }, { x: 1500, y: 65 },
-        { x: 1700, y: 75 }, { x: 1900, y: 85 }, { x: 2200, y: 98 },
-        { x: 2500, y: 112 }, { x: 3000, y: 138 }, { x: 3500, y: 160 }
+        { x: 800, y: 120 }, { x: 1200, y: 155 }, { x: 1500, y: 190 },
+        { x: 1800, y: 220 }, { x: 2200, y: 260 }, { x: 2500, y: 310 },
+        { x: 3000, y: 380 }, { x: 3500, y: 450 }, { x: 4000, y: 520 }
     ];
-    const lineData = regData.map(p => ({ x: p.x, y: p.x * 0.046 - 2 }));
+    const lineData = regData.map(p => ({ x: p.x, y: p.x * 0.115 + 25 }));
 
     new Chart(document.getElementById('regressionChart'), {
         type: 'scatter',
@@ -457,7 +468,7 @@ function initAnalytics() {
             plugins: { legend: { labels: { color: '#9898b0' } } },
             scales: {
                 x: { title: { display: true, text: 'Area (sqft)', color: '#9898b0' }, ticks: { color: '#9898b0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                y: { title: { display: true, text: 'Price (Lakhs)', color: '#9898b0' }, ticks: { color: '#9898b0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                y: { title: { display: true, text: 'Price ($k)', color: '#9898b0' }, ticks: { color: '#9898b0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
             }
         }
     });
@@ -481,10 +492,10 @@ document.getElementById('compare-btn').addEventListener('click', () => {
         const area = parseFloat(card.querySelector('.cmp-area').value) || 1000;
         const bed = parseInt(card.querySelector('.cmp-bed').value) || 2;
         const loc = parseFloat(card.querySelector('.cmp-loc').value) || 0.85;
-        const price = area * 0.045 + bed * 5 + (area * 0.045) * (loc - 0.5) * 1.2;
+        const price = (area * 0.085) * (0.5 + (bed * 0.15)) * loc;
         prices.push(price.toFixed(1));
         labels.push(['Property A', 'Property B', 'Property C'][i]);
-        card.querySelector('.cmp-price').textContent = `₹${price.toFixed(1)} Lakhs`;
+        card.querySelector('.cmp-price').textContent = `$${price.toFixed(1)}k`;
     });
 
     const ctx = document.getElementById('compareChart').getContext('2d');
@@ -505,7 +516,7 @@ document.getElementById('compare-btn').addEventListener('click', () => {
             plugins: { legend: { display: false } },
             scales: {
                 x: { ticks: { color: '#9898b0', font: { size: 14 } }, grid: { display: false } },
-                y: { ticks: { color: '#9898b0', callback: v => '₹' + v + 'L' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                y: { ticks: { color: '#9898b0', callback: v => '$' + v + 'k' }, grid: { color: 'rgba(255,255,255,0.05)' } }
             }
         }
     });
@@ -514,7 +525,7 @@ document.getElementById('compare-btn').addEventListener('click', () => {
 // ==================== EMI CALCULATOR ====================
 let emiChart = null;
 function calculateEMI() {
-    const P = parseFloat(document.getElementById('loan-amount').value) * 100000;
+    const P = parseFloat(document.getElementById('loan-amount').value) * 1000;
     const r = parseFloat(document.getElementById('interest-rate').value) / 100 / 12;
     const n = parseInt(document.getElementById('loan-tenure').value) * 12;
 
@@ -522,9 +533,9 @@ function calculateEMI() {
     const totalPayment = emi * n;
     const totalInterest = totalPayment - P;
 
-    document.getElementById('emi-value').textContent = '₹' + Math.round(emi).toLocaleString();
-    document.getElementById('total-interest').textContent = '₹' + (totalInterest / 100000).toFixed(1) + 'L';
-    document.getElementById('total-payment').textContent = '₹' + (totalPayment / 100000).toFixed(1) + 'L';
+    document.getElementById('emi-value').textContent = '$' + Math.round(emi).toLocaleString();
+    document.getElementById('total-interest').textContent = '$' + (totalInterest / 1000).toFixed(1) + 'k';
+    document.getElementById('total-payment').textContent = '$' + (totalPayment / 1000).toFixed(1) + 'k';
 
     const ctx = document.getElementById('emiChart').getContext('2d');
     if (emiChart) emiChart.destroy();

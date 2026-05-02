@@ -1,42 +1,62 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, r2_score
+import pickle
 
-data = {
-    'Area_sqft': [500, 700, 900, 1100, 1300, 1500, 1700, 1900],
-    'Price_lakhs': [20, 28, 36, 45, 55, 65, 75, 85]
-}
+# Load the dataset
+train_df = pd.read_csv('train.csv')
 
-df = pd.DataFrame(data)
-print(df)
+features = ['GrLivArea', 'BedroomAbvGr', 'FullBath', 'HalfBath', 'YearBuilt', 'OverallQual', 'TotalBsmtSF', 'GarageCars']
+X = train_df[features].copy()
+y = train_df['SalePrice']
 
-plt.scatter(df['Area_sqft'], df['Price_lakhs'])
-plt.xlabel("Area (sqft)")
-plt.ylabel("Price (Lakhs)")
-plt.title("House Area vs Price")
-plt.show()
+# Handle missing values
+X = X.fillna(X.median())
 
-X = df[['Area_sqft']]
-y = df['Price_lakhs']
+# Train model
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.25, random_state=0
-)
-
-model = LinearRegression()
+model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-predictions = model.predict(X_test)
-print("Predicted Prices:", predictions)
+# Evaluate
+y_pred = model.predict(X_test)
+print(f"MAE: {mean_absolute_error(y_test, y_pred)}")
+print(f"R2 Score: {r2_score(y_test, y_pred)}")
 
-area = float(input("Enter house area in sqft: "))
-predicted_price = model.predict([[area]])
-print("Estimated House Price (in lakhs):", predicted_price[0])
+# Save the model
+with open('house_model.pkl', 'wb') as f:
+    pickle.dump(model, f)
 
-plt.scatter(X, y)
-plt.plot(X, model.predict(X), linestyle='--')
-plt.xlabel("Area (sqft)")
-plt.ylabel("Price (Lakhs)")
-plt.title("Regression Line")
-plt.show()
+# Print average prices for neighborhoods to use as location multipliers in JS
+neighborhood_prices = train_df.groupby('Neighborhood')['SalePrice'].mean().sort_values()
+print("\nNeighborhood Average Prices (Sorted):")
+print(neighborhood_prices)
+
+print("\nModel trained successfully with Kaggle dataset!")
+
+# Interactive Prediction
+print("\n--- Predict House Price (Interactive) ---")
+try:
+    area = float(input("Enter Ground Living Area (sqft): "))
+    quality = int(input("Enter Overall Quality (1-10): "))
+    year = int(input("Enter Year Built: "))
+    rooms = int(input("Enter Total Rooms: "))
+
+    sample_input = pd.DataFrame([[
+        area, 
+        3, # BedroomAbvGr
+        2, # FullBath
+        0, # HalfBath
+        year, 
+        quality, 
+        1000, # TotalBsmtSF
+        2 # GarageCars
+    ]], columns=features)
+    
+    predicted = model.predict(sample_input)[0]
+    print(f"\nEstimated Sale Price: ${predicted:,.2f}")
+except Exception as e:
+    print(f"Error during prediction: {e}")

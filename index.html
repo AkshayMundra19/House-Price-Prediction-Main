@@ -133,16 +133,15 @@
                 <div class="input-group">
                     <label for="location-select">Location</label>
                     <select id="location-select" class="select-input">
-                        <option value="1.0">Mumbai - Premium</option>
-                        <option value="0.9">Delhi NCR</option>
-                        <option value="0.85" selected>Bangalore</option>
-                        <option value="0.8">Hyderabad</option>
-                        <option value="0.75">Pune</option>
-                        <option value="0.7">Chennai</option>
-                        <option value="0.6">Kolkata</option>
-                        <option value="0.55">Ahmedabad</option>
-                        <option value="0.5">Jaipur</option>
-                        <option value="0.45">Lucknow</option>
+                        <option value="0.55">MeadowV (Budget)</option>
+                        <option value="0.7">Edwards</option>
+                        <option value="0.7">Old Town</option>
+                        <option value="0.8">North Ames</option>
+                        <option value="1.0" selected>College Creek (Standard)</option>
+                        <option value="1.1">Gilbert</option>
+                        <option value="1.25">Somerset</option>
+                        <option value="1.7">Stone Brook (Premium)</option>
+                        <option value="1.85">Northridge (Luxury)</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -185,25 +184,25 @@
                     <div class="result-content" id="result-content" style="display:none;">
                         <div class="price-display">
                             <span class="price-label">Estimated Price</span>
-                            <div class="price-value">₹<span id="predicted-price">0</span> <span class="price-unit">Lakhs</span></div>
+                            <div class="price-value">$<span id="predicted-price">0</span> <span class="price-unit">k</span></div>
                             <div class="confidence-badge" id="confidence-badge">95% Confidence</div>
                         </div>
                         <div class="result-breakdown">
                             <div class="breakdown-item">
                                 <span class="bd-label">Base Price</span>
-                                <span class="bd-value" id="base-price">₹0L</span>
+                                <span class="bd-value" id="base-price">$0k</span>
                             </div>
                             <div class="breakdown-item">
                                 <span class="bd-label">Location Premium</span>
-                                <span class="bd-value" id="loc-premium">+₹0L</span>
+                                <span class="bd-value" id="loc-premium">+$0k</span>
                             </div>
                             <div class="breakdown-item">
                                 <span class="bd-label">Amenity Value</span>
-                                <span class="bd-value" id="amenity-val">+₹0L</span>
+                                <span class="bd-value" id="amenity-val">+$0k</span>
                             </div>
                             <div class="breakdown-item">
                                 <span class="bd-label">Age Depreciation</span>
-                                <span class="bd-value negative" id="age-dep">-₹0L</span>
+                                <span class="bd-value negative" id="age-dep">-$0k</span>
                             </div>
                         </div>
                         <div class="price-range">
@@ -212,8 +211,8 @@
                                 <div class="range-marker" id="range-marker"></div>
                             </div>
                             <div class="range-labels">
-                                <span id="range-low">₹0L</span>
-                                <span id="range-high">₹0L</span>
+                                <span id="range-low">$0k</span>
+                                <span id="range-high">$0k</span>
                             </div>
                         </div>
                         <canvas id="priceFactorsChart" height="200"></canvas>
@@ -223,7 +222,7 @@
                     <div class="mini-card glass-card">
                         <div class="mini-icon">📈</div>
                         <div class="mini-label">Price/sqft</div>
-                        <div class="mini-value" id="price-per-sqft">₹0</div>
+                        <div class="mini-value" id="price-per-sqft">$0</div>
                     </div>
                     <div class="mini-card glass-card">
                         <div class="mini-icon">🏷️</div>
@@ -253,7 +252,7 @@
                 <canvas id="trendChart"></canvas>
             </div>
             <div class="chart-card glass-card">
-                <h3>City-wise Prices (₹/sqft)</h3>
+                <h3>City-wise Prices ($/sqft)</h3>
                 <canvas id="cityChart"></canvas>
             </div>
             <div class="chart-card glass-card">
@@ -280,27 +279,27 @@
                 <div class="compare-input"><label>Area (sqft)</label><input type="number" class="cmp-area" value="1000"></div>
                 <div class="compare-input"><label>Bedrooms</label><input type="number" class="cmp-bed" value="2" min="1" max="5"></div>
                 <div class="compare-input"><label>Location</label>
-                    <select class="cmp-loc"><option value="1.0">Mumbai</option><option value="0.9">Delhi</option><option value="0.85" selected>Bangalore</option><option value="0.8">Hyderabad</option><option value="0.75">Pune</option><option value="0.7">Chennai</option></select>
+                    <select class="cmp-loc"><option value="1.85">NoRidge</option><option value="1.7">StoneBr</option><option value="1.0" selected>CollgCr</option><option value="0.8">NAmes</option><option value="0.7">Edwards</option><option value="0.55">MeadowV</option></select>
                 </div>
-                <div class="compare-result"><span class="cmp-price">₹0 Lakhs</span></div>
+                <div class="compare-result"><span class="cmp-price">$0k</span></div>
             </div>
             <div class="compare-card glass-card" id="compare-2">
                 <h4>Property B</h4>
                 <div class="compare-input"><label>Area (sqft)</label><input type="number" class="cmp-area" value="1500"></div>
                 <div class="compare-input"><label>Bedrooms</label><input type="number" class="cmp-bed" value="3" min="1" max="5"></div>
                 <div class="compare-input"><label>Location</label>
-                    <select class="cmp-loc"><option value="1.0">Mumbai</option><option value="0.9" selected>Delhi</option><option value="0.85">Bangalore</option><option value="0.8">Hyderabad</option><option value="0.75">Pune</option><option value="0.7">Chennai</option></select>
+                    <select class="cmp-loc"><option value="1.85">NoRidge</option><option value="1.7">StoneBr</option><option value="1.0">CollgCr</option><option value="0.8" selected>NAmes</option><option value="0.7">Edwards</option><option value="0.55">MeadowV</option></select>
                 </div>
-                <div class="compare-result"><span class="cmp-price">₹0 Lakhs</span></div>
+                <div class="compare-result"><span class="cmp-price">$0k</span></div>
             </div>
             <div class="compare-card glass-card" id="compare-3">
                 <h4>Property C</h4>
                 <div class="compare-input"><label>Area (sqft)</label><input type="number" class="cmp-area" value="2000"></div>
                 <div class="compare-input"><label>Bedrooms</label><input type="number" class="cmp-bed" value="4" min="1" max="5"></div>
                 <div class="compare-input"><label>Location</label>
-                    <select class="cmp-loc"><option value="1.0" selected>Mumbai</option><option value="0.9">Delhi</option><option value="0.85">Bangalore</option><option value="0.8">Hyderabad</option><option value="0.75">Pune</option><option value="0.7">Chennai</option></select>
+                    <select class="cmp-loc"><option value="1.85" selected>NoRidge</option><option value="1.7">StoneBr</option><option value="1.0">CollgCr</option><option value="0.8">NAmes</option><option value="0.7">Edwards</option><option value="0.55">MeadowV</option></select>
                 </div>
-                <div class="compare-result"><span class="cmp-price">₹0 Lakhs</span></div>
+                <div class="compare-result"><span class="cmp-price">$0k</span></div>
             </div>
         </div>
         <button id="compare-btn" class="btn btn-primary" style="margin:2rem auto;display:block;">Compare Properties</button>
@@ -319,7 +318,7 @@
         <div class="emi-grid">
             <div class="emi-inputs glass-card">
                 <div class="input-group">
-                    <label for="loan-amount">Loan Amount (₹ Lakhs)</label>
+                    <label for="loan-amount">Loan Amount ($ Thousands)</label>
                     <div class="slider-container">
                         <input type="range" id="loan-slider" min="5" max="500" value="50" step="5">
                         <input type="number" id="loan-amount" value="50" min="5" max="500">
@@ -342,15 +341,15 @@
                 <div class="emi-result-grid">
                     <div class="emi-stat">
                         <span class="emi-stat-label">Monthly EMI</span>
-                        <span class="emi-stat-value" id="emi-value">₹0</span>
+                        <span class="emi-stat-value" id="emi-value">$0</span>
                     </div>
                     <div class="emi-stat">
                         <span class="emi-stat-label">Total Interest</span>
-                        <span class="emi-stat-value" id="total-interest">₹0</span>
+                        <span class="emi-stat-value" id="total-interest">$0k</span>
                     </div>
                     <div class="emi-stat">
                         <span class="emi-stat-label">Total Payment</span>
-                        <span class="emi-stat-value" id="total-payment">₹0</span>
+                        <span class="emi-stat-value" id="total-payment">$0k</span>
                     </div>
                 </div>
             </div>
