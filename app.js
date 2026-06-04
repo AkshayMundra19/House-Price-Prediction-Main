@@ -1,4 +1,4 @@
-/* ========== HOMEVALUATE AI - APP.JS ========== */
+﻿/* ========== HOMEVALUATE AI - APP.JS ========== */
 
 // ==================== LOADER ====================
 window.addEventListener('load', () => {
@@ -221,8 +221,16 @@ document.querySelectorAll('.glass-card, .section-header, .chart-card').forEach(e
 function syncSlider(sliderId, inputId) {
     const slider = document.getElementById(sliderId);
     const input = document.getElementById(inputId);
-    slider.addEventListener('input', () => input.value = slider.value);
-    input.addEventListener('input', () => slider.value = input.value);
+    slider.addEventListener('input', () => {
+        input.value = slider.value;
+    });
+    input.addEventListener('input', () => {
+        if (input.value === '') return;
+        const parsed = Number(input.value);
+        if (Number.isFinite(parsed)) {
+            slider.value = parsed;
+        }
+    });
 }
 syncSlider('area-slider', 'area-input');
 syncSlider('age-slider', 'age-input');
@@ -230,6 +238,136 @@ syncSlider('floor-slider', 'floor-input');
 syncSlider('loan-slider', 'loan-amount');
 syncSlider('interest-slider', 'interest-rate');
 syncSlider('tenure-slider', 'loan-tenure');
+
+const PREDICTION_API_BASE = window.PREDICTION_API_URL ||
+    ((window.location.origin && window.location.origin.startsWith('http'))
+        ? window.location.origin
+        : 'http://127.0.0.1:5000');
+const PREDICTION_HISTORY_KEY = 'homevaluate_prediction_history';
+
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+function formatSignedK(value) {
+    const sign = value >= 0 ? '+' : '-';
+    return `${sign}$${Math.abs(value).toFixed(1)}k`;
+}
+
+function readNumericValue(id, label, min, max) {
+    const element = document.getElementById(id);
+    const value = Number(element.value);
+    if (!Number.isFinite(value)) {
+        throw new Error(`${label} is required.`);
+    }
+    if (value < min || value > max) {
+        throw new Error(`${label} must be between ${min} and ${max}.`);
+    }
+    return value;
+}
+
+function collectPredictionInputs() {
+    return {
+        area: readNumericValue('area-input', 'Area', 200, 5000),
+        bedrooms: Number(document.querySelector('#bedroom-btns .chip.active')?.dataset.val || 2),
+        bathrooms: Number(document.querySelector('#bathroom-btns .chip.active')?.dataset.val || 1),
+        location_factor: readNumericValue('location-select', 'Location factor', 0.3, 2.5),
+        property_age: readNumericValue('age-input', 'Property age', 0, 30),
+        floor: readNumericValue('floor-input', 'Floor', 0, 40),
+        amenities: ['parking', 'gym', 'pool', 'garden', 'security', 'lift']
+            .filter(amenity => document.getElementById(amenity)?.checked)
+    };
+}
+
+function setPredictionLoading(isLoading) {
+    const btn = document.getElementById('predict-btn');
+    const loading = document.getElementById('prediction-loading');
+    btn.disabled = isLoading;
+    btn.setAttribute('aria-busy', String(isLoading));
+    loading.hidden = !isLoading;
+}
+
+function showPredictionError(message) {
+    const errorBox = document.getElementById('prediction-error');
+    errorBox.textContent = message;
+    errorBox.hidden = false;
+}
+
+function clearPredictionError() {
+    const errorBox = document.getElementById('prediction-error');
+    errorBox.textContent = '';
+    errorBox.hidden = true;
+}
+
+function getPredictionHistory() {
+    try {
+        return JSON.parse(localStorage.getItem(PREDICTION_HISTORY_KEY) || '[]');
+    } catch (error) {
+        return [];
+    }
+}
+
+function savePredictionHistory(entry) {
+    const history = [entry, ...getPredictionHistory()].slice(0, 5);
+    localStorage.setItem(PREDICTION_HISTORY_KEY, JSON.stringify(history));
+    renderPredictionHistory();
+}
+
+function renderPredictionHistory() {
+    const historyContainer = document.getElementById('prediction-history');
+    const history = getPredictionHistory();
+    if (!history.length) {
+        historyContainer.innerHTML = '<p class="history-empty">No recent predictions yet.</p>';
+        return;
+    }
+
+    historyContainer.innerHTML = history.map(entry => `
+        <div class="history-item">
+            <div>
+                <strong>${entry.area} sq ft</strong>
+                <span>${entry.bedrooms} bed, ${entry.bathrooms} bath</span>
+            </div>
+            <div class="history-price">$${entry.price_k.toFixed(1)}k</div>
+        </div>
+    `).join('');
+}
+
+function renderSmartInsights(payload) {
+    const summary = document.getElementById('smart-summary');
+    const signals = document.getElementById('smart-signals');
+    const reasons = document.getElementById('smart-reasons');
+    const pill = document.getElementById('smart-backend-pill');
+
+    if (!summary || !signals || !reasons || !pill) return;
+
+    if (!payload) {
+        summary.textContent = 'The model will explain its strongest signals after you predict.';
+        signals.innerHTML = '';
+        reasons.innerHTML = '';
+        pill.textContent = 'FastAPI ready';
+        const trend = document.getElementById('market-trend');
+        const category = document.getElementById('property-cat');
+        if (trend) trend.textContent = 'Waiting';
+        if (category) category.textContent = 'Dash';
+        return;
+    }
+
+    summary.textContent = payload.summary || 'Explainable model signals are available below.';
+    pill.textContent = payload.backend || 'FastAPI';
+    signals.innerHTML = (payload.signals || []).map(signal => `
+        <div class="smart-signal">
+            <span class="smart-signal-label">${signal.label}</span>
+            <span class="smart-signal-value">${signal.value}</span>
+            <span class="smart-signal-detail">${signal.detail || ''}</span>
+        </div>
+    `).join('');
+    reasons.innerHTML = (payload.reasons || []).map(reason => `<li>${reason}</li>`).join('');
+}
+
+document.getElementById('clear-history-btn')?.addEventListener('click', () => {
+    localStorage.removeItem(PREDICTION_HISTORY_KEY);
+    renderPredictionHistory();
+});
 
 // ==================== CHIP BUTTONS ====================
 document.querySelectorAll('.btn-group').forEach(group => {
@@ -242,75 +380,87 @@ document.querySelectorAll('.btn-group').forEach(group => {
 });
 
 // ==================== PREDICTION ENGINE ====================
-function predictPrice() {
-    const area = parseFloat(document.getElementById('area-input').value) || 1200;
-    const bedrooms = parseInt(document.querySelector('#bedroom-btns .chip.active')?.dataset.val || 2);
-    const bathrooms = parseInt(document.querySelector('#bathroom-btns .chip.active')?.dataset.val || 1);
-    const locFactor = parseFloat(document.getElementById('location-select').value) || 0.85;
-    const age = parseFloat(document.getElementById('age-input').value) || 2;
-    const floor = parseFloat(document.getElementById('floor-input').value) || 5;
+async function predictPrice() {
+    clearPredictionError();
 
-    const amenities = ['parking', 'gym', 'pool', 'garden', 'security', 'lift']
-        .filter(a => document.getElementById(a)?.checked).length;
+    let inputs;
+    try {
+        inputs = collectPredictionInputs();
+    } catch (error) {
+        showPredictionError(error.message);
+        return;
+    }
 
-    // ML-like model: Linear regression + feature engineering
-    // Logic derived from Kaggle Ames Housing Dataset
-    const baseValPerSqft = 85;
-    let basePrice = (area * baseValPerSqft) / 1000; // In Thousands
-    
-    // Quality adjustment based on amenities and floor
-    let qualityScore = 5 + (amenities * 0.5); 
-    if (floor > 10) qualityScore += 1;
-    
-    let qualityMultiplier = 0.5 + (qualityScore / 10); // 1.0 is standard
-    
-    let bedroomBonus = (bedrooms - 2) * 5; // $5k per extra bedroom
-    let bathroomBonus = (bathrooms - 1) * 10; // $10k per extra bathroom
-    
-    // Location Factor (normalized to 1.0 for College Creek)
-    let locationPremium = basePrice * (locFactor - 1.0);
-    
-    // Age Depreciation ($1k per year)
-    let ageDepreciation = age * 1.2;
+    setPredictionLoading(true);
 
-    let totalPrice = (basePrice * qualityMultiplier) + bedroomBonus + bathroomBonus + locationPremium - ageDepreciation;
-    totalPrice = Math.max(totalPrice, 40); // Min $40k
+    try {
+        const response = await fetch(`${PREDICTION_API_BASE}/api/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(inputs)
+        });
+        const data = await response.json().catch(() => ({}));
 
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || data.message || `Prediction request failed (${response.status}).`);
+        }
 
-    // Display results
-    document.getElementById('result-placeholder').style.display = 'none';
-    document.getElementById('result-content').style.display = 'block';
+        const breakdown = data.breakdown || {};
+        const priceK = Number(data.predicted_price_k ?? (data.predicted_price / 1000));
+        const basePriceK = Number(breakdown.base_price_k ?? (breakdown.base_price / 1000) ?? 0);
+        const locationPremiumK = Number(breakdown.location_premium_k ?? (breakdown.location_premium / 1000) ?? 0);
+        const amenityValueK = Number(breakdown.amenity_value_k ?? (breakdown.amenity_value / 1000) ?? 0);
+        const ageDepK = Number(breakdown.age_depreciation_k ?? (breakdown.age_depreciation / 1000) ?? 0);
+        const extrasK = Number(
+            (breakdown.bedroom_bonus_k ?? 0) +
+            (breakdown.bathroom_bonus_k ?? 0) +
+            (breakdown.floor_bonus_k ?? 0)
+        );
 
-    // Animate price
-    animateValue('predicted-price', 0, totalPrice.toFixed(1), 800);
+        document.getElementById('result-placeholder').style.display = 'none';
+        document.getElementById('result-content').style.display = 'block';
 
-    document.getElementById('base-price').textContent = `$${basePrice.toFixed(1)}k`;
-    document.getElementById('loc-premium').textContent = `${locationPremium >= 0 ? '+' : ''}$${locationPremium.toFixed(1)}k`;
-    document.getElementById('amenity-val').textContent = `+ $${(basePrice * (qualityMultiplier - 1)).toFixed(1)}k`;
-    document.getElementById('age-dep').textContent = `-$${ageDepreciation.toFixed(1)}k`;
+        animateValue('predicted-price', 0, priceK.toFixed(1), 800);
+        document.getElementById('base-price').textContent = `$${basePriceK.toFixed(1)}k`;
+        document.getElementById('loc-premium').textContent = formatSignedK(locationPremiumK);
+        document.getElementById('amenity-val').textContent = `+ $${amenityValueK.toFixed(1)}k`;
+        document.getElementById('age-dep').textContent = `-$${Math.abs(ageDepK).toFixed(1)}k`;
 
-    const confidence = Math.max(88, 98 - age * 0.5 - Math.abs(area - 1200) * 0.003).toFixed(0);
-    document.getElementById('confidence-badge').textContent = `${confidence}% Confidence`;
+        document.getElementById('confidence-badge').textContent = `${data.confidence}% Confidence`;
 
-    // Price range
-    const low = (totalPrice * 0.92).toFixed(1);
-    const high = (totalPrice * 1.08).toFixed(1);
-    document.getElementById('range-low').textContent = `$${low}k`;
-    document.getElementById('range-high').textContent = `$${high}k`;
-    document.getElementById('range-fill').style.width = '60%';
-    document.getElementById('range-marker').style.left = '55%';
+        const low = (priceK * 0.92).toFixed(1);
+        const high = (priceK * 1.08).toFixed(1);
+        document.getElementById('range-low').textContent = `$${low}k`;
+        document.getElementById('range-high').textContent = `$${high}k`;
+        document.getElementById('range-fill').style.width = '60%';
+        document.getElementById('range-marker').style.left = '55%';
 
-    // Mini cards
-    document.getElementById('price-per-sqft').textContent = `$${(totalPrice * 1000 / area).toFixed(1)}`;
-    document.getElementById('property-cat').textContent =
-        totalPrice < 30 ? 'Budget' : totalPrice < 60 ? 'Mid-Range' : totalPrice < 100 ? 'Premium' : 'Luxury';
-    document.getElementById('market-trend').textContent = '📈 +8.2%';
+        document.getElementById('price-per-sqft').textContent = `$${(priceK * 1000 / inputs.area).toFixed(1)}`;
+        document.getElementById('property-cat').textContent =
+            priceK < 30 ? 'Budget' : priceK < 60 ? 'Mid-Range' : priceK < 100 ? 'Premium' : 'Luxury';
+        document.getElementById('market-trend').textContent = '+8.2%';
 
-    // Factors chart
-    renderFactorsChart(basePrice, locationPremium, amenityValue, bedroomBonus + bathroomBonus + floorPremium, ageDepreciation);
+        renderSmartInsights({
+            backend: data.model_source === 'house_model.pkl' ? 'FastAPI + model' : 'FastAPI fallback',
+            summary: data.smart_insights?.summary,
+            signals: data.smart_insights?.signals,
+            reasons: data.smart_insights?.reasons
+        });
 
-    // Scroll to result
-    document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        renderFactorsChart(basePriceK, locationPremiumK, amenityValueK, extrasK, Math.abs(ageDepK));
+        document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        savePredictionHistory({
+            area: inputs.area,
+            bedrooms: inputs.bedrooms,
+            bathrooms: inputs.bathrooms,
+            price_k: priceK
+        });
+    } catch (error) {
+        showPredictionError(error.message || 'Unable to reach the prediction server.');
+    } finally {
+        setPredictionLoading(false);
+    }
 }
 
 function animateValue(id, start, end, duration) {
@@ -328,6 +478,8 @@ function animateValue(id, start, end, duration) {
 }
 
 document.getElementById('predict-btn').addEventListener('click', predictPrice);
+renderPredictionHistory();
+renderSmartInsights(null);
 
 // ==================== PRICE FACTORS CHART ====================
 let factorsChart = null;
@@ -489,9 +641,15 @@ document.getElementById('compare-btn').addEventListener('click', () => {
     const prices = [];
     const labels = [];
     cards.forEach((card, i) => {
-        const area = parseFloat(card.querySelector('.cmp-area').value) || 1000;
-        const bed = parseInt(card.querySelector('.cmp-bed').value) || 2;
-        const loc = parseFloat(card.querySelector('.cmp-loc').value) || 0.85;
+        const area = Number(card.querySelector('.cmp-area').value);
+        const bed = Number(card.querySelector('.cmp-bed').value);
+        const loc = Number(card.querySelector('.cmp-loc').value);
+        if (!Number.isFinite(area) || area <= 0 || !Number.isFinite(bed) || bed <= 0 || !Number.isFinite(loc)) {
+            prices.push(0);
+            card.querySelector('.cmp-price').textContent = 'Invalid input';
+            labels.push(['Property A', 'Property B', 'Property C'][i]);
+            return;
+        }
         const price = (area * 0.085) * (0.5 + (bed * 0.15)) * loc;
         prices.push(price.toFixed(1));
         labels.push(['Property A', 'Property B', 'Property C'][i]);
@@ -505,7 +663,7 @@ document.getElementById('compare-btn').addEventListener('click', () => {
         data: {
             labels,
             datasets: [{
-                label: 'Price (₹ Lakhs)',
+                label: 'Price (â‚¹ Lakhs)',
                 data: prices,
                 backgroundColor: ['rgba(108,92,231,0.8)', 'rgba(0,206,201,0.8)', 'rgba(253,121,168,0.8)'],
                 borderRadius: 12, borderSkipped: false, barThickness: 60
@@ -525,11 +683,22 @@ document.getElementById('compare-btn').addEventListener('click', () => {
 // ==================== EMI CALCULATOR ====================
 let emiChart = null;
 function calculateEMI() {
-    const P = parseFloat(document.getElementById('loan-amount').value) * 1000;
-    const r = parseFloat(document.getElementById('interest-rate').value) / 100 / 12;
-    const n = parseInt(document.getElementById('loan-tenure').value) * 12;
+    const principalK = Number(document.getElementById('loan-amount').value);
+    const rateAnnual = Number(document.getElementById('interest-rate').value);
+    const years = Number(document.getElementById('loan-tenure').value);
 
-    const emi = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+    if (!Number.isFinite(principalK) || principalK <= 0 || !Number.isFinite(rateAnnual) || rateAnnual < 0 || !Number.isFinite(years) || years <= 0) {
+        document.getElementById('emi-value').textContent = '$0';
+        document.getElementById('total-interest').textContent = '$0k';
+        document.getElementById('total-payment').textContent = '$0k';
+        return;
+    }
+
+    const P = principalK * 1000;
+    const r = rateAnnual / 100 / 12;
+    const n = years * 12;
+
+    const emi = r === 0 ? P / n : P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
     const totalPayment = emi * n;
     const totalInterest = totalPayment - P;
 
@@ -569,3 +738,4 @@ const emiObserver = new IntersectionObserver((entries) => {
     });
 }, { threshold: 0.1 });
 emiObserver.observe(document.getElementById('emi'));
+

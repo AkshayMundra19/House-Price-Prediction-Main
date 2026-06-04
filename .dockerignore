@@ -1,0 +1,15 @@
+.git
+.github
+.vscode
+.idea
+__pycache__
+*.pyc
+venv
+.venv
+node_modules
+dist
+build
+*.log
+package-lock.json
+train.csv
+test.csv

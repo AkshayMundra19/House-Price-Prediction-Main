@@ -86,3 +86,45 @@ Factors include:
 ## License
 
 MIT License — feel free to use and modify!
+
+## Backend Setup
+
+Run the prediction backend with:
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+The API will be available at `http://127.0.0.1:5000/api/predict`.
+The backend is built with FastAPI and returns explainable prediction metadata.
+
+## Docker Setup
+
+Build and run the app in Docker:
+
+```bash
+docker build -t homevaluate-ai .
+docker run --rm -p 5000:5000 homevaluate-ai
+```
+
+Then open `http://127.0.0.1:5000` in your browser.
+
+Or run with Compose:
+
+```bash
+docker-compose up --build
+```
+
+If your Docker installation uses the newer plugin syntax, this also works:
+
+```bash
+docker compose up --build
+```
+
+## What Makes It Smart
+
+- FastAPI serves both the UI and the prediction API
+- The response includes prediction breakdowns and reasoning signals
+- The UI shows why the estimate changed, not just the final number
+- Inputs are validated before scoring, which helps avoid bad predictions

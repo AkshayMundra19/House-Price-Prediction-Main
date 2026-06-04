@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="AI-Powered House Price Prediction with 3D visualization, market analytics, EMI calculator and smart comparison tools.">
-    <title>HomeValuate AI — Smart House Price Predictor</title>
+    <title>HomeValuate AI - Smart House Price Predictor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -61,12 +61,12 @@
     <!-- Hero Section -->
     <section id="hero" class="section">
         <div class="hero-content">
-            <div class="hero-badge">🏠 AI-Powered Predictions</div>
+            <div class="hero-badge">AI-Powered Predictions</div>
             <h1 class="hero-title">
                 Predict House Prices
                 <span class="gradient-text">With Intelligence</span>
             </h1>
-            <p class="hero-subtitle">Advanced machine learning model with 3D visualization. Get instant property valuations, market analytics, EMI calculations, and smart comparisons.</p>
+            <p class="hero-subtitle">FastAPI-backed predictions with explainable signals, live model scoring, 3D visualization, market analytics, EMI calculations, and smart comparisons.</p>
             <div class="hero-stats">
                 <div class="stat-card">
                     <div class="stat-value" data-count="98.5">0</div>
@@ -97,9 +97,9 @@
     <!-- Predictor Section -->
     <section id="predictor" class="section">
         <div class="section-header">
-            <div class="section-badge">🤖 AI Prediction Engine</div>
+            <div class="section-badge">AI Prediction Engine</div>
             <h2 class="section-title">Smart Price <span class="gradient-text">Predictor</span></h2>
-            <p class="section-desc">Enter property details and our AI model predicts the most accurate market value</p>
+            <p class="section-desc">Enter property details and the backend returns a prediction plus the signals that make it smart.</p>
         </div>
         <div class="predictor-grid">
             <div class="input-panel glass-card">
@@ -161,24 +161,31 @@
                 <div class="input-group">
                     <label>Amenities</label>
                     <div class="amenity-grid">
-                        <label class="amenity-chip"><input type="checkbox" id="parking" checked><span>🅿️ Parking</span></label>
-                        <label class="amenity-chip"><input type="checkbox" id="gym"><span>🏋️ Gym</span></label>
-                        <label class="amenity-chip"><input type="checkbox" id="pool"><span>🏊 Pool</span></label>
-                        <label class="amenity-chip"><input type="checkbox" id="garden" checked><span>🌳 Garden</span></label>
-                        <label class="amenity-chip"><input type="checkbox" id="security" checked><span>🔒 Security</span></label>
-                        <label class="amenity-chip"><input type="checkbox" id="lift"><span>🛗 Lift</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="parking" checked><span>ðŸ…¿ï¸ Parking</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="gym"><span>ðŸ‹ï¸ Gym</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="pool"><span>ðŸŠ Pool</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="garden" checked><span>ðŸŒ³ Garden</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="security" checked><span>ðŸ”’ Security</span></label>
+                        <label class="amenity-chip"><input type="checkbox" id="lift"><span>ðŸ›— Lift</span></label>
                     </div>
                 </div>
                 <button id="predict-btn" class="btn btn-primary btn-full">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     <span>Predict Price</span>
                 </button>
+                <div class="prediction-feedback" id="prediction-feedback" aria-live="polite">
+                    <div class="prediction-loading" id="prediction-loading" hidden>
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span>Requesting prediction from the backend...</span>
+                    </div>
+                    <div class="prediction-error" id="prediction-error" hidden></div>
+                </div>
             </div>
 
             <div class="result-panel">
                 <div class="result-card glass-card" id="result-card">
                     <div class="result-placeholder" id="result-placeholder">
-                        <div class="placeholder-icon">🏠</div>
+                        <div class="placeholder-icon">ðŸ </div>
                         <p>Configure property details and click predict</p>
                     </div>
                     <div class="result-content" id="result-content" style="display:none;">
@@ -220,20 +227,41 @@
                 </div>
                 <div class="mini-cards">
                     <div class="mini-card glass-card">
-                        <div class="mini-icon">📈</div>
+                        <div class="mini-icon mini-icon-price">Sqft</div>
                         <div class="mini-label">Price/sqft</div>
                         <div class="mini-value" id="price-per-sqft">$0</div>
                     </div>
                     <div class="mini-card glass-card">
-                        <div class="mini-icon">🏷️</div>
+                        <div class="mini-icon mini-icon-category">Tier</div>
                         <div class="mini-label">Category</div>
-                        <div class="mini-value" id="property-cat">—</div>
+                        <div class="mini-value" id="property-cat">Dash</div>
                     </div>
                     <div class="mini-card glass-card">
-                        <div class="mini-icon">📊</div>
+                        <div class="mini-icon mini-icon-trend">Pulse</div>
                         <div class="mini-label">Market Trend</div>
-                        <div class="mini-value" id="market-trend">—</div>
+                        <div class="mini-value" id="market-trend">Waiting</div>
                     </div>
+                </div>
+                <div class="smart-panel glass-card" id="smart-panel">
+                    <div class="smart-header">
+                        <div>
+                            <div class="smart-kicker">AI-native insight</div>
+                            <h3>Why this prediction is smart</h3>
+                        </div>
+                        <div class="smart-pill" id="smart-backend-pill">FastAPI ready</div>
+                    </div>
+                    <p class="smart-summary" id="smart-summary">
+                        The model will explain its strongest signals after you predict.
+                    </p>
+                    <div class="smart-signals" id="smart-signals"></div>
+                    <ul class="smart-reasons" id="smart-reasons"></ul>
+                </div>
+                <div class="history-card glass-card">
+                    <div class="history-header">
+                        <h3 class="panel-title">Recent Predictions</h3>
+                        <button type="button" id="clear-history-btn" class="history-clear">Clear</button>
+                    </div>
+                    <div id="prediction-history" class="prediction-history"></div>
                 </div>
             </div>
         </div>
@@ -242,9 +270,9 @@
     <!-- Analytics Section -->
     <section id="analytics" class="section">
         <div class="section-header">
-            <div class="section-badge">📊 Market Intelligence</div>
+            <div class="section-badge">Market Intelligence</div>
             <h2 class="section-title">Market <span class="gradient-text">Analytics</span></h2>
-            <p class="section-desc">Real-time market data, trends, and insights powered by AI</p>
+            <p class="section-desc">Model-driven market insights, comparison logic, and explainable signals powered by the backend.</p>
         </div>
         <div class="analytics-grid">
             <div class="chart-card glass-card">
@@ -269,7 +297,7 @@
     <!-- Compare Section -->
     <section id="compare" class="section">
         <div class="section-header">
-            <div class="section-badge">⚖️ Smart Compare</div>
+            <div class="section-badge">Smart Compare</div>
             <h2 class="section-title">Property <span class="gradient-text">Comparison</span></h2>
             <p class="section-desc">Compare up to 3 properties side by side</p>
         </div>
@@ -311,7 +339,7 @@
     <!-- EMI Section -->
     <section id="emi" class="section">
         <div class="section-header">
-            <div class="section-badge">🏦 Finance Calculator</div>
+            <div class="section-badge">Finance Calculator</div>
             <h2 class="section-title">EMI <span class="gradient-text">Calculator</span></h2>
             <p class="section-desc">Plan your home loan with detailed monthly breakdowns</p>
         </div>
@@ -369,10 +397,11 @@
             <div class="footer-links">
                 <a href="#hero">Home</a><a href="#predictor">Predict</a><a href="#analytics">Analytics</a><a href="#compare">Compare</a><a href="#emi">EMI</a>
             </div>
-            <p class="footer-copy">© 2026 HomeValuate AI. Built with ❤️ and Machine Learning.</p>
+            <p class="footer-copy">&copy; 2026 HomeValuate AI. Built with care and machine learning.</p>
         </div>
     </footer>
 
     <script src="app.js"></script>
 </body>
 </html>
+
