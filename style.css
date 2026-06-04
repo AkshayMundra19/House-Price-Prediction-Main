@@ -26,11 +26,13 @@
     --bg: #f0f2f8;
     --bg2: #e8eaf2;
     --surface: rgba(255,255,255,0.7);
-    --surface2: rgba(255,255,255,0.9);
+    --surface2: rgba(255,255,255,09);
     --border: rgba(0,0,0,0.08);
     --text: #1a1a2e;
     --text2: #555570;
     --glow: 0 0 30px rgba(108,92,231,0.15);
+    --nav-link-color: #2d2d4e;
+    --brand-color: #1a1a2e
 }
 
 /* ========== RESET ========== */
@@ -125,14 +127,14 @@ body {
 .nav-brand { display: flex; align-items: center; gap: 10px; }
 .brand-icon { width: 36px; height: 36px; color: var(--accent); }
 .brand-icon svg { width: 100%; height: 100%; }
-.brand-name { font-family: var(--font2); font-size: 1.3rem; font-weight: 700; }
+.brand-name { font-family: var(--font2); font-size: 1.3rem; font-weight: 700; color: var(--brand-color, white); }
 .brand-ai {
     background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    font-weight: 800;
+    font-weight: 800; color: var(--brand-color, white);
 }
 .nav-links { display: flex; gap: 8px; }
 .nav-link {
-    text-decoration: none; color: var(--text2); padding: 8px 16px;
+    text-decoration: none; color: var(--nav-link-color, var(--text2)); padding: 8px 16px;
     border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 500;
     transition: var(--transition); position: relative;
 }
