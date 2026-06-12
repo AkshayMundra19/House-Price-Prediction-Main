@@ -93,7 +93,9 @@ Run the prediction backend with:
 
 ```bash
 pip install -r requirements.txt
-python app.py
+python house_price_prediction.py
+
+<!-- Fixed backend startup command to match the file shown in Project Structure. -->
 ```
 
 The API will be available at `http://127.0.0.1:5000/api/predict`.
